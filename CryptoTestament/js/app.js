@@ -75,7 +75,238 @@ const App = {
                 throw "Não foi possível detectar sua carteira MetaMask. Certifique-se que ela tenha sido corretamente instalada.";
               }
 
-              this.cryptoTestamentContract = new web3.eth.Contract(cryptoTestament.abi, '0x5E91dBD1aFEdcE6ad6CE30543dC52121fA9488f1');
+              let contractSpecs = {
+                "contractName": "CryptoTestament",
+                "abi": [
+                  {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                  },
+                  {
+                    "anonymous": false,
+                    "inputs": [
+                      {
+                        "indexed": false,
+                        "internalType": "address",
+                        "name": "_senderAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "address",
+                        "name": "_beneficiaryAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_totalAmount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_feeAmount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_testamentAmount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_daysBeforeUnlock",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "enum CryptoTestament.TestamentStatus",
+                        "name": "_status",
+                        "type": "uint8"
+                      }
+                    ],
+                    "name": "CreateTestament",
+                    "type": "event"
+                  },
+                  {
+                    "anonymous": false,
+                    "inputs": [
+                      {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_oldFeePercent",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_newFeePercent",
+                        "type": "uint256"
+                      }
+                    ],
+                    "name": "SetFeePercent",
+                    "type": "event"
+                  },
+                  {
+                    "inputs": [
+                      {
+                        "internalType": "uint256",
+                        "name": "_newServiceFeePercent",
+                        "type": "uint256"
+                      }
+                    ],
+                    "name": "setServiceFeePercent",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                  },
+                  {
+                    "inputs": [],
+                    "name": "getServiceFeePercent",
+                    "outputs": [
+                      {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                      }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                  },
+                  {
+                    "inputs": [],
+                    "name": "getContractBalance",
+                    "outputs": [
+                      {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                      }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                  },
+                  {
+                    "inputs": [
+                      {
+                        "internalType": "address",
+                        "name": "_toAddress",
+                        "type": "address"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "_daysBeforeUnlock",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "string",
+                        "name": "_encryptedTestament",
+                        "type": "string"
+                      },
+                      {
+                        "internalType": "string",
+                        "name": "_testamentHash",
+                        "type": "string"
+                      }
+                    ],
+                    "name": "makeTestament",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function",
+                    "payable": true
+                  },
+                  {
+                    "inputs": [
+                      {
+                        "internalType": "uint256",
+                        "name": "_testamentId",
+                        "type": "uint256"
+                      }
+                    ],
+                    "name": "cancelTestament",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                  },
+                  {
+                    "inputs": [
+                      {
+                        "internalType": "uint256",
+                        "name": "_testamentId",
+                        "type": "uint256"
+                      }
+                    ],
+                    "name": "executeTestament",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                  },
+                  {
+                    "inputs": [],
+                    "name": "getTestaments",
+                    "outputs": [
+                      {
+                        "components": [
+                          {
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                          },
+                          {
+                            "internalType": "address",
+                            "name": "senderAddress",
+                            "type": "address"
+                          },
+                          {
+                            "internalType": "address",
+                            "name": "beneficiaryAddress",
+                            "type": "address"
+                          },
+                          {
+                            "internalType": "uint256",
+                            "name": "testamentAmount",
+                            "type": "uint256"
+                          },
+                          {
+                            "internalType": "uint256",
+                            "name": "unlockTimestamp",
+                            "type": "uint256"
+                          },
+                          {
+                            "internalType": "string",
+                            "name": "encryptedTestament",
+                            "type": "string"
+                          },
+                          {
+                            "internalType": "string",
+                            "name": "testamentHash",
+                            "type": "string"
+                          },
+                          {
+                            "internalType": "enum CryptoTestament.TestamentStatus",
+                            "name": "status",
+                            "type": "uint8"
+                          }
+                        ],
+                        "internalType": "struct CryptoTestament.Testament[]",
+                        "name": "",
+                        "type": "tuple[]"
+                      }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                  }
+                ]
+              };
+
+              this.cryptoTestamentContract = new web3.eth.Contract(contractSpecs.abi, '0x5E91dBD1aFEdcE6ad6CE30543dC52121fA9488f1');
               await this.loadTestaments(accounts[0]);
               this.walletAddress = this.formatAddress(accounts[0]);
 
