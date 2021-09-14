@@ -304,7 +304,7 @@ const App = {
                 ]
               };
 
-              this.cryptoTestamentContract = new web3.eth.Contract(contractSpecs.abi, '0x5E91dBD1aFEdcE6ad6CE30543dC52121fA9488f1');
+              this.cryptoTestamentContract = new web3.eth.Contract(contractSpecs.abi, '0x27459e2f72ED77Fa9cf2dbaC0b90e0548b2d7489');
               await this.loadTestaments(accounts[0]);
               this.walletAddress = this.formatAddress(accounts[0]);
 
