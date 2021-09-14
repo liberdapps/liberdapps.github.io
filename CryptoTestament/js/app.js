@@ -4,8 +4,6 @@ const App = {
   },
 
   initContract: function () {
-    $.getJSON("CryptoTestament.json", function (cryptoTestament) {
-
       let appData = {
         walletAddress: null,
         cryptoTestamentContract: null,
@@ -692,7 +690,6 @@ const App = {
       new Vue({
         el: '#app'
       })
-    });
   }
 
 };
