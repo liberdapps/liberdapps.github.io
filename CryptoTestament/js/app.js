@@ -1,4 +1,4 @@
-alert('s');
+alert('sx');
 const App = {
   init: async function () {
     return App.initContract();
@@ -481,7 +481,7 @@ const App = {
               let testamentObj = this.encryptTestament(this.createTestamentV1(msg), passphrase);
               let networkId = await web3.eth.net.getId();
               await this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).estimateGas({ from: this.walletAddress, value: weiAmount });
-              let obj = this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).send({
+              this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).send({
                 from: this.walletAddress,
                 value: weiAmount
               }).on('transactionHash', function(hash){
@@ -526,17 +526,14 @@ const App = {
 
               let networkId = await web3.eth.net.getId();
               let gasEst = await this.cryptoTestamentContract.methods.cancelTestament(testamentId).estimateGas({ from: this.walletAddress });
-              let obj = await this.cryptoTestamentContract.methods.cancelTestament(testamentId).send({
+              obj = await this.cryptoTestamentContract.methods.cancelTestament(testamentId).send({
                 from: this.walletAddress,
                 value: 0
+              }).on('transactionHash', function(hash){
+                $("#createTestamentModal").modal('hide');
+                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
+                $("#successModal").modal('show');
               });
-
-              $("#createTestamentModal").modal('hide');
-              $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
-              $("#successModal").modal('show');
-
-              console.log(obj);
-
 
             } catch (err) {
               console.log(err);
@@ -573,14 +570,11 @@ const App = {
               let obj = await this.cryptoTestamentContract.methods.executeTestament(testamentId).send({
                 from: this.walletAddress,
                 value: 0
+              }).on('transactionHash', function(hash){
+                $("#createTestamentModal").modal('hide');
+                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
+                $("#successModal").modal('show');
               });
-
-              $("#createTestamentModal").modal('hide');
-              $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
-              $("#successModal").modal('show');
-
-              console.log(obj);
-
 
             } catch (err) {
               console.log(err);
