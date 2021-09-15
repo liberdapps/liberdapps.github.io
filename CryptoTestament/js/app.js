@@ -531,7 +531,7 @@ const App = {
                 value: 0
               }).on('transactionHash', function(hash){
                 $("#createTestamentModal").modal('hide');
-                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + transactionHash);
+                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + hash);
                 $("#successModal").modal('show');
               });
 
