@@ -1,4 +1,3 @@
-alert('sxz');
 const App = {
   init: async function () {
     return App.initContract();
