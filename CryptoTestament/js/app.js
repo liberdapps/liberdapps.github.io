@@ -480,17 +480,14 @@ const App = {
               let testamentObj = this.encryptTestament(this.createTestamentV1(msg), passphrase);
               let networkId = await web3.eth.net.getId();
               await this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).estimateGas({ from: this.walletAddress, value: weiAmount });
-              let obj = await this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).send({
+              let obj = this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).send({
                 from: this.walletAddress,
                 value: weiAmount
+              }).on('transactionHash', function(hash){
+                $("#createTestamentModal").modal('hide');
+                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + hash);
+                $("#successModal").modal('show');
               });
-
-              $("#createTestamentModal").modal('hide');
-              $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
-              $("#successModal").modal('show');
-
-              console.log(obj);
-
 
             } catch (err) {
               console.log(err);
