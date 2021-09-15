@@ -1,3 +1,4 @@
+alert('s');
 const App = {
   init: async function () {
     return App.initContract();
