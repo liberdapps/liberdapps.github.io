@@ -1,4 +1,4 @@
-alert('sx');
+alert('sxz');
 const App = {
   init: async function () {
     return App.initContract();
@@ -526,12 +526,12 @@ const App = {
 
               let networkId = await web3.eth.net.getId();
               let gasEst = await this.cryptoTestamentContract.methods.cancelTestament(testamentId).estimateGas({ from: this.walletAddress });
-              obj = await this.cryptoTestamentContract.methods.cancelTestament(testamentId).send({
+              await this.cryptoTestamentContract.methods.cancelTestament(testamentId).send({
                 from: this.walletAddress,
                 value: 0
               }).on('transactionHash', function(hash){
                 $("#createTestamentModal").modal('hide');
-                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
+                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + transactionHash);
                 $("#successModal").modal('show');
               });
 
@@ -567,12 +567,12 @@ const App = {
 
               let networkId = await web3.eth.net.getId();
               let gasEst = await this.cryptoTestamentContract.methods.executeTestament(testamentId).estimateGas({ from: this.walletAddress });
-              let obj = await this.cryptoTestamentContract.methods.executeTestament(testamentId).send({
+              this.cryptoTestamentContract.methods.executeTestament(testamentId).send({
                 from: this.walletAddress,
                 value: 0
               }).on('transactionHash', function(hash){
                 $("#createTestamentModal").modal('hide');
-                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + obj.transactionHash);
+                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + hash);
                 $("#successModal").modal('show');
               });
 
