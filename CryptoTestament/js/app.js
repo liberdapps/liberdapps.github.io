@@ -14,18 +14,18 @@ const App = {
         lang: 'pt',
         langs: {
           'en': {
-            title: 'Crypto Testament',
+            title: 'CryptoTestament',
             subtitle: 'Your keys, your coins, your testament!',
             launchDApp: 'Launch DApp',
             intro: 'Bla bla',
             broughtBy: 'Brought by '
           },
           'pt': {
-            title: 'Crypto Testament',
+            title: 'CryptoTestament',
             subtitle: 'Your keys, your coins, your testament!',
             launchDApp: 'Acessar DApp',
             intro1: 'Com as criptomoedas, você assume o controle sobre o seu próprio dinheiro.',
-            intro2: 'Com o Crypto Testament, você define quem fica com ele na sua ausência.',
+            intro2: 'Com o CryptoTestament, você define quem fica com ele na sua ausência.',
             broughtBy: 'Oferecido por '
           }
         }
@@ -366,10 +366,6 @@ const App = {
                 let bt = testaments.filter(t => t.beneficiaryAddress.toLowerCase() == walletAddress.toLowerCase());
 
                 bt = bt.filter(t => (t.status === "0" && latestBlock.timestamp >= t.unlockTimestamp) || t.status === "2");
-
-                // if (Math.random() < 0.5) {
-                //   throw "ops";
-                // }
 
                 this.makerTestaments = mt;
                 this.beneficiaryTestaments = bt;
