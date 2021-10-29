@@ -11791,4 +11791,5 @@ section#contact form#contactForm :-ms-input-placeholder {
 
   .thumbnail.soon:hover {
     cursor: default;
+    background: none;
   }
