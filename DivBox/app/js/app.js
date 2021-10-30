@@ -707,6 +707,6 @@ $(function () {
   $(window).load(function () {
     window.App = App;
     App.init();
-    $("#helpModal").modal('show');
+    //$("#helpModal").modal('show');
   });
 });
