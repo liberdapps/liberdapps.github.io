@@ -1,688 +1,389 @@
 const App = {
-  init: async function () {
-    return App.initContract();
+
+  testamentServiceContract: null,
+  encryptionKey: null,
+  jsEncrypt: new JSEncrypt(),
+
+  data: {
+    loadingError: null,
+    walletAddress: null,
+    editMode: false,
+    processing: false,
+    testament: null,
+    status: null,
+    inputFundsAmount: "",
+    inputName: "",
+    inputEmail: "",
+    inputBeneficiaryName: "",
+    inputBeneficiaryEmail: "",
+    inputBeneficiaryAddress: "",
+    inputProofOfLife: 30
   },
 
-  initContract: function () {
-      let appData = {
-        walletAddress: null,
-        cryptoTestamentContract: null,
-        loadingTestaments: false,
-        loadingError: null,
-        makerTestaments: null,
-        beneficiaryTestaments: null,
-        lang: 'pt',
-        langs: {
-          'en': {
-            title: 'CryptoTestament',
-            subtitle: 'Your keys, your coins, your testament!',
-            launchDApp: 'Launch DApp',
-            intro: 'Bla bla',
-            broughtBy: 'Brought by '
-          },
-          'pt': {
-            title: 'CryptoTestament',
-            subtitle: 'Your keys, your coins, your testament!',
-            launchDApp: 'Acessar DApp',
-            intro1: 'Com as criptomoedas, você assume o controle sobre o seu próprio dinheiro.',
-            intro2: 'Com o CryptoTestament, você define quem fica com ele na sua ausência.',
-            broughtBy: 'Oferecido por '
+  vueApp: {
+    template: '#dapp-template',
+    data() {
+      return App.data;
+    },
+    computed: {
+
+      formValid() {
+        return (
+          !Utils.isEmpty(this.inputName) &&
+          !Utils.isEmpty(this.inputEmail) && Utils.isValidEmail(this.inputEmail) &&
+          !Utils.isEmpty(this.inputBeneficiaryName) &&
+          !Utils.isEmpty(this.inputBeneficiaryEmail) && Utils.isValidEmail(this.inputBeneficiaryEmail) &&
+          !Utils.isEmpty(this.inputBeneficiaryAddress) && Utils.isValidAddress(this.inputBeneficiaryAddress) &&
+          Number(this.inputProofOfLife) >= 1
+        );
+      },
+
+      validFundsAmount() {
+        try {
+          let value = Utils.toBaseUnit(this.inputFundsAmount.trim(), 18);
+          let testamentBalance = Utils.toBN(this.testament.testamentBalance);
+          return (value.toString() !== '0' && value.lte(testamentBalance));  
+        } catch (err) {
+          return false;
+        };
+      },
+
+      formattedUnlockTime() {
+        if (this.testament) {
+          let unlockTime = (Number(this.testament.lastProofOfLifeTimestamp) + Number(this.testament.proofOfLifeThreshold));
+          let date = new Date(unlockTime * 1000);
+          return date.toISOString().replace('T', ' ').replace('.000Z', '') + ' UTC';
+        }
+
+        return "";
+      },
+
+      formattedBalance() {
+        let balance = '0';
+        if (this.testament) {
+          balance = String(this.testament.testamentBalance);
+        }
+
+        return Utils.formatUnit(Utils.toBN(balance), 18) + ' rBTC';
+      },
+
+      testamentStatusString() {
+        if (this.testamentLocked) {
+          return "locked";
+        } else if (this.testamentUnlocked) {
+          return "unlocked for execution";
+        } else if (this.testamentCancelled) {
+          return "cancelled";
+        } else if (this.testamentExecuted) {
+          return "executed";
+        }
+        return "";
+      },
+
+      testamentLocked() {
+        if (this.testament) {
+          let now = Math.floor(new Date().getTime() / 1000);
+          let timeSinceLastProofOfLife = now - this.testament.lastProofOfLifeTimestamp;
+          return this.testament.status === '0' && timeSinceLastProofOfLife <= this.testament.proofOfLifeThreshold;
+        }
+        return false;
+      },
+
+      testamentNotifiable() {
+        if (this.testament) {
+          let now = Math.floor(new Date().getTime() / 1000);
+          let timeSinceLastProofOfLife = now - this.testament.lastProofOfLifeTimestamp;
+          return this.testament.status === '0' && timeSinceLastProofOfLife + Utils.TESTAMENT_NOTIFY_THRESHOLD >= this.testament.proofOfLifeThreshold;
+        }
+        return false;
+      },
+
+      testamentUnlocked() {
+        if (this.testament) {
+          let now = Math.floor(new Date().getTime() / 1000);
+          let timeSinceLastProofOfLife = now - this.testament.lastProofOfLifeTimestamp;
+          return this.testament.status === '0' && timeSinceLastProofOfLife > this.testament.proofOfLifeThreshold;
+        }
+        return false;
+      },
+
+      testamentCancelled() {
+        return this.testament && this.testament.status === '1';
+      },
+
+      testamentExecuted() {
+        return this.testament && this.testament.status === '2';
+      }
+
+    },
+    methods: {
+
+      setMaxFundsAmount() {
+        this.inputFundsAmount = Utils.formatUnit(Utils.toBN(this.testament.testamentBalance), 18)
+      },
+      
+      processTestament: function(appData, testament) {
+        let decryptedInfo = JSON.parse(CryptoJS.AES.decrypt(testament.encryptedInfo, App.encryptionKey).toString(CryptoJS.enc.Utf8));
+    
+        appData.inputName = decryptedInfo.name;
+        appData.inputEmail = decryptedInfo.email;
+        appData.inputBeneficiaryName = decryptedInfo.beneficiaryName;
+        appData.inputBeneficiaryEmail = decryptedInfo.beneficiaryEmail;
+        appData.inputBeneficiaryAddress = testament.beneficiaryAddress;
+        appData.inputProofOfLife = Number(testament.proofOfLifeThreshold) / 60; // / 24 / 3600;
+        appData.status = testament.status;
+
+        appData.testament = testament;   
+      },
+
+      encryptDetails(name, email, beneficiaryName, beneficiaryEmail) {
+        let info = {
+          name: name,
+          email: email,
+          beneficiaryName: beneficiaryName,
+          beneficiaryEmail: beneficiaryEmail
+        };
+
+        return CryptoJS.AES.encrypt(JSON.stringify(info), App.encryptionKey).toString();
+      },
+
+      async setupTestament() {
+
+        let name = this.inputName.trim();
+        let email = this.inputEmail.trim();
+        let beneficiaryName = this.inputBeneficiaryName.trim();
+        let beneficiaryEmail = this.inputBeneficiaryEmail.trim();
+        let beneficiaryAddress = this.inputBeneficiaryAddress.trim();
+        let proofOfLifeThreshold = Number(this.inputProofOfLife) * 60;// * 24 * 3600;
+        let ctx = this;
+
+        let encryptedInfo = this.encryptDetails(name, email, beneficiaryName, beneficiaryEmail);
+
+        function onError(err) {
+          ctx.processing = false;
+          console.log(err);
+
+          // Error 4001 means that user just denied the signature of the transaction, no need to show an error.
+          // The 'Invalid JSON RPC response' is a workaround for the RSK wallet which doesn't provide a good error code...
+          if (err.code !== 4001 && String(err).indexOf("Invalid JSON RPC response") === -1) {
+            let errorMsg = err;
+            if (err.message && err.message.trim().length > 0) {
+              errorMsg = err.message;
+            }
+            $("#errorMsg").text(errorMsg);
+            $("#errorModal").modal('show');
           }
         }
-      };
 
-      Vue.component('main-page', {
-        template: '#main-template',
-        data() {
-          return appData;
-        }
-      });
+        this.processing = true;
 
-      Vue.component('dapp-page', {
-        template: '#dapp-template',
-        data() {
-          return appData;
-        },
-        methods: {
-
-          toETH(weiValue) {
-            return web3.utils.fromWei(weiValue, 'ether') + ' ETH';
-          },
-
-          formatAddress(address) {
-            return "0x" + address.toUpperCase().substring(2);
-          },
-
-          async connectWebWallet() {
+        let encryptedEncryptionKey = App.jsEncrypt.encrypt(App.encryptionKey);
+        
+        Utils.invokeMethodAndWaitConfirmation(
+          App.testamentServiceContract.methods.setupTestament(beneficiaryAddress, proofOfLifeThreshold, encryptedEncryptionKey, encryptedInfo), 
+          this.walletAddress,
+          async function() {
             try {
-
-              if (!window.ethereum) {
-                throw "Não foi possível detectar sua carteira MetaMask. Certifique-se que ela tenha sido corretamente instalada.";
-              }
-
-              let response = await ethereum.request({ method: 'eth_requestAccounts' });
-              window.web3 = new Web3(window.ethereum);
-              console.log(response);
-
-              if (!response) {
-                throw "Não foi possível detectar sua carteira MetaMask. Certifique-se que ela tenha sido corretamente instalada.";
-              }
-
-              let accounts = response;
-              if (!accounts || !accounts.length) {
-                throw "Não foi possível detectar sua carteira MetaMask. Certifique-se que ela tenha sido corretamente instalada.";
-              }
-
-              let contractSpecs = {
-                "contractName": "CryptoTestament",
-                "abi": [
-                  {
-                    "inputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "constructor"
-                  },
-                  {
-                    "anonymous": false,
-                    "inputs": [
-                      {
-                        "indexed": false,
-                        "internalType": "address",
-                        "name": "_senderAddress",
-                        "type": "address"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "address",
-                        "name": "_beneficiaryAddress",
-                        "type": "address"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "_totalAmount",
-                        "type": "uint256"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "_feeAmount",
-                        "type": "uint256"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "_testamentAmount",
-                        "type": "uint256"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "_daysBeforeUnlock",
-                        "type": "uint256"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "enum CryptoTestament.TestamentStatus",
-                        "name": "_status",
-                        "type": "uint8"
-                      }
-                    ],
-                    "name": "CreateTestament",
-                    "type": "event"
-                  },
-                  {
-                    "anonymous": false,
-                    "inputs": [
-                      {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "_oldFeePercent",
-                        "type": "uint256"
-                      },
-                      {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "_newFeePercent",
-                        "type": "uint256"
-                      }
-                    ],
-                    "name": "SetFeePercent",
-                    "type": "event"
-                  },
-                  {
-                    "inputs": [
-                      {
-                        "internalType": "uint256",
-                        "name": "_newServiceFeePercent",
-                        "type": "uint256"
-                      }
-                    ],
-                    "name": "setServiceFeePercent",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                  },
-                  {
-                    "inputs": [],
-                    "name": "getServiceFeePercent",
-                    "outputs": [
-                      {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                      }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "constant": true
-                  },
-                  {
-                    "inputs": [],
-                    "name": "getContractBalance",
-                    "outputs": [
-                      {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                      }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "constant": true
-                  },
-                  {
-                    "inputs": [
-                      {
-                        "internalType": "address",
-                        "name": "_toAddress",
-                        "type": "address"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "_daysBeforeUnlock",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "string",
-                        "name": "_encryptedTestament",
-                        "type": "string"
-                      },
-                      {
-                        "internalType": "string",
-                        "name": "_testamentHash",
-                        "type": "string"
-                      }
-                    ],
-                    "name": "makeTestament",
-                    "outputs": [],
-                    "stateMutability": "payable",
-                    "type": "function",
-                    "payable": true
-                  },
-                  {
-                    "inputs": [
-                      {
-                        "internalType": "uint256",
-                        "name": "_testamentId",
-                        "type": "uint256"
-                      }
-                    ],
-                    "name": "cancelTestament",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                  },
-                  {
-                    "inputs": [
-                      {
-                        "internalType": "uint256",
-                        "name": "_testamentId",
-                        "type": "uint256"
-                      }
-                    ],
-                    "name": "executeTestament",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                  },
-                  {
-                    "inputs": [],
-                    "name": "getTestaments",
-                    "outputs": [
-                      {
-                        "components": [
-                          {
-                            "internalType": "uint256",
-                            "name": "timestamp",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "address",
-                            "name": "senderAddress",
-                            "type": "address"
-                          },
-                          {
-                            "internalType": "address",
-                            "name": "beneficiaryAddress",
-                            "type": "address"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "testamentAmount",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "unlockTimestamp",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "string",
-                            "name": "encryptedTestament",
-                            "type": "string"
-                          },
-                          {
-                            "internalType": "string",
-                            "name": "testamentHash",
-                            "type": "string"
-                          },
-                          {
-                            "internalType": "enum CryptoTestament.TestamentStatus",
-                            "name": "status",
-                            "type": "uint8"
-                          }
-                        ],
-                        "internalType": "struct CryptoTestament.Testament[]",
-                        "name": "",
-                        "type": "tuple[]"
-                      }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "constant": true
-                  }
-                ]
-              };
-
-              this.cryptoTestamentContract = new web3.eth.Contract(contractSpecs.abi, '0x27459e2f72ED77Fa9cf2dbaC0b90e0548b2d7489');
-              await this.loadTestaments(accounts[0]);
-              this.walletAddress = this.formatAddress(accounts[0]);
-
+              ctx.processTestament(ctx, await App.testamentServiceContract.methods.testamentDetailsOf(ctx.walletAddress).call());
+              ctx.processing = false;
+              ctx.editMode = false;
             } catch (err) {
-              console.log(err);
-
-              let $modal = $("#errorModal");
-              let title = "Erro";
-              let error = err;
-              if (err.message) {
-                error = err.message;
-              }
-
-              if (err.code === -32002) {
-                title = "Autorização pendente";
-                error = "Por favor, permita que este aplicativo se conecte à sua carteira MetaMask. Verifique o ícone da mesma.";
-              } else if (err.code === 4001) {
-                // User just canceled...
-                return;
-              }
-
-              $modal.find('.modal-body').text(error);
-              $modal.find('.modal-title').text(title);
-              $modal.modal('show');
-            };
-          },
-
-          async loadTestaments(walletAddress) {
-            this.loadingTestaments = true;
-            this.loadingError = null;
-            this.makerTestaments = null;
-            this.beneficiaryTestaments = null;
-
-
-            this.$nextTick(async () => {
-              try {
-                let latestBlock = await web3.eth.getBlock('latest');
-                let testamentsTuple = await this.cryptoTestamentContract.methods.getTestaments().call();
-                let id = 0;
-                let testaments = [];
-
-                testamentsTuple.forEach(t => {
-                  let testament = {
-                    id: id++,
-                    dateTime: new Date(t.timestamp * 1000).toISOString(),
-                    senderAddress: this.formatAddress(t.senderAddress),
-                    beneficiaryAddress: this.formatAddress(t.beneficiaryAddress),
-                    testamentAmount: t.testamentAmount,
-                    unlockTimestamp: +t.unlockTimestamp,
-                    encryptedTestament: t.encryptedTestament,
-                    testamentHash: t.testamentHash,
-                    message: null,
-                    status: t.status
-                  };
-                  testaments.push(testament);
-                });
-
-                let mt = testaments.filter(t => t.senderAddress.toLowerCase() == walletAddress.toLowerCase());
-                let bt = testaments.filter(t => t.beneficiaryAddress.toLowerCase() == walletAddress.toLowerCase());
-
-                bt = bt.filter(t => (t.status === "0" && latestBlock.timestamp >= t.unlockTimestamp) || t.status === "2");
-
-                this.makerTestaments = mt;
-                this.beneficiaryTestaments = bt;
-                this.loadingTestaments = false;
-              } catch (err) {
-                this.loadingError = err;
-                if (err.message) {
-                  this.loadingError = err.message;
-                }
-                this.loadingTestaments = false;
-              }
-            });
-          },
-
-          showMakeTestamentDialog() {
-            $("#createTestamentModal").modal({ backdrop: 'static', keyboard: false }).modal('show');
-            $("#btnMakeTestament").text('Criar testamento').removeClass('disabled').prop('disabled', false);
-            $("#createTestamentModal").find('[data-bs-dismiss]').prop('disabled', false);
-            $("#createTestamentModal").find('input, textarea').prop('disabled', false);
-            $("#createTestamentModal").on('shown.bs.modal', function () {
-              setTimeout(() => {
-                $("#txtBeneficiaryAddress").focus();
-              }, 200);
-            });
-          },
-
-          async makeTestament() {
-            let toAddress = $("#txtBeneficiaryAddress").val().trim();
-            let weiAmount;
-            let minExecDays = $("#txtMinExecDays").val().trim();
-            let msg = $("#txtMsg").val().trim();
-            let passphrase = $("#txtPassphrase").val().trim();
-
-            $("#txtBeneficiaryAddress").removeClass('is-invalid');
-            $("#txtAmount").removeClass('is-invalid');
-            $("#txtMinExecDays").removeClass('is-invalid');
-            $("#txtMsg").removeClass('is-invalid');
-            $("#txtPassphrase").removeClass('is-invalid');
-
-            if (!web3.utils.isAddress(toAddress)) {
-              $("#txtBeneficiaryAddress").addClass('is-invalid');
-              $("#errorModal").find('.modal-body').text('Por favor, insira um endereço de carteira válido.');
-              $("#errorModal").modal('show');
-              $("#errorModal").off().on('hidden.bs.modal', function () {
-                $("#errorModal").off();
-                $("#txtBeneficiaryAddress").focus();
-              });
-              return;
-            }
-
-            try {
-              weiAmount = web3.utils.toWei($("#txtAmount").val().trim(), 'ether');
-              if (weiAmount < 1) {
-                throw 'weiAmount should be > 0.'
-              }
-            } catch (err) {
-              $("#txtAmount").addClass('is-invalid');
-              $("#errorModal").find('.modal-body').text('Por favor, insira uma quantia em ETH válida.');
-              $("#errorModal").modal('show');
-              $("#errorModal").off().on('hidden.bs.modal', function () {
-                $("#errorModal").off();
-                $("#txtAmount").focus();
-              });
-              return;
-            }
-
-            if (!isInt(minExecDays) || +minExecDays < 1) {
-              $("#txtMinExecDays").addClass('is-invalid');
-              $("#errorModal").find('.modal-body').text('Por favor, especifique corretamente o número mínimo de dias necessários para executar o testamento.');
-              $("#errorModal").modal('show');
-              $("#errorModal").off().on('hidden.bs.modal', function () {
-                $("#errorModal").off();
-                $("#txtMinExecDays").focus();
-              });
-              return;
-            }
-
-            minExecDays = +minExecDays;
-
-            if (!msg || msg.length === 0) {
-              $("#txtMsg").addClass('is-invalid');
-              $("#errorModal").find('.modal-body').text('Por favor, insira uma mensagem no seu testamento.');
-              $("#errorModal").modal('show');
-              $("#errorModal").off().on('hidden.bs.modal', function () {
-                $("#errorModal").off();
-                $("#txtMsg").focus();
-              });
-              return;
-            }
-
-            if (!passphrase || passphrase.length === 0) {
-              $("#txtPassphrase").addClass('is-invalid');
-              $("#errorModal").find('.modal-body').text('Por favor, insira uma senha para decodificar sua mensagem.');
-              $("#errorModal").modal('show');
-              $("#errorModal").off().on('hidden.bs.modal', function () {
-                $("#errorModal").off();
-                $("#txtPassphrase").focus();
-              });
-              return;
-            }
-
-
-            $("#btnMakeTestament").addClass('disabled').prop('disabled', true).text('Criando testamento...');
-            $("#createTestamentModal").find('[data-bs-dismiss]').prop('disabled', true);
-            $("#createTestamentModal").find('input, textarea').prop('disabled', true);
-
-            try {
-              let testamentObj = this.encryptTestament(this.createTestamentV1(msg), passphrase);
-              let networkId = await web3.eth.net.getId();
-              await this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).estimateGas({ from: this.walletAddress, value: weiAmount });
-              this.cryptoTestamentContract.methods.makeTestament(toAddress, minExecDays, testamentObj.encryptedTestament, testamentObj.testamentHash).send({
-                from: this.walletAddress,
-                value: weiAmount
-              }).on('transactionHash', function(hash){
-                $("#createTestamentModal").modal('hide');
-                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + hash);
-                $("#successModal").modal('show');
-              });
-
-            } catch (err) {
-              console.log(err);
-              let errorMessage = err;
-              if (err.message) {
-                errorMessage = err.message;
-              }
-
-              $("#btnMakeTestament").text('Criar testamento').removeClass('disabled').prop('disabled', false);
-              $("#createTestamentModal").find('[data-bs-dismiss]').prop('disabled', false);
-              $("#createTestamentModal").find('input, textarea').prop('disabled', false);
-
-              if (err.code && err.code === 4001) {
-                // User just canceled, no need to show an error.
-              } else {
-                $("#errorModal").find('.modal-body').text('Ocorreu um erro ao criar o testamento: ' + errorMessage);
-                $("#errorModal").modal('show');
-              }
-
+              onError(err);
             }
           },
+          function(err) {
+            onError(err);
+          }
+        );
+      },
 
-          async cancelTestament(testamentId) {
-            let testament = this.makerTestaments.find(t => t.id === testamentId);
-            if (!testament) {
-              testament = this.beneficiaryTestaments.find(t => t.id === testamentId);
+      editTestament() {
+        this.editMode = true;
+        this.$nextTick(() => this.$refs.txtName.focus());
+      },
+
+      cancelTestamentChanges() {
+        this.editMode = false;
+        this.processTestament(this, this.testament);
+      },
+
+      async cancelTestament() {
+        let ctx = this;
+        this.processing = true;
+
+        function onError(err) {
+          ctx.processing = false;
+          console.log(err);
+
+          // Error 4001 means that user just denied the signature of the transaction, no need to show an error.
+          // The 'Invalid JSON RPC response' is a workaround for the RSK wallet which doesn't provide a good error code...
+          if (err.code !== 4001 && String(err).indexOf("Invalid JSON RPC response") === -1) {
+            let errorMsg = err;
+            if (err.message && err.message.trim().length > 0) {
+              errorMsg = err.message;
             }
-
-            try {
-
-              if (!testament) {
-                console.log("Testament not found.");
-                throw "Ocorreu um erro ao cancelar este testamento. Por favor, atualize a página e tente novamente.";
-              }
-
-              let networkId = await web3.eth.net.getId();
-              let gasEst = await this.cryptoTestamentContract.methods.cancelTestament(testamentId).estimateGas({ from: this.walletAddress });
-              await this.cryptoTestamentContract.methods.cancelTestament(testamentId).send({
-                from: this.walletAddress,
-                value: 0
-              }).on('transactionHash', function(hash){
-                $("#createTestamentModal").modal('hide');
-                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + hash);
-                $("#successModal").modal('show');
-              });
-
-            } catch (err) {
-              console.log(err);
-              let errorMessage = err;
-              if (err.message) {
-                errorMessage = err.message;
-              }
-
-
-              if (err.code && err.code === 4001) {
-                // User just canceled, no need to show an error.
-              } else {
-                $("#errorModal").find('.modal-body').text('Falha ao cancelar testamento. Erro: ' + errorMessage);
-                $("#errorModal").modal('show');
-              }
-            }
-          },
-
-          async executeTestament(testamentId) {
-            let testament = this.makerTestaments.find(t => t.id === testamentId);
-            if (!testament) {
-              testament = this.beneficiaryTestaments.find(t => t.id === testamentId);
-            }
-
-            try {
-
-              if (!testament) {
-                console.log("Testament not found.");
-                throw "Ocorreu um erro ao executar este testamento. Por favor, atualize a página e tente novamente.";
-              }
-
-              let networkId = await web3.eth.net.getId();
-              let gasEst = await this.cryptoTestamentContract.methods.executeTestament(testamentId).estimateGas({ from: this.walletAddress });
-              this.cryptoTestamentContract.methods.executeTestament(testamentId).send({
-                from: this.walletAddress,
-                value: 0
-              }).on('transactionHash', function(hash){
-                $("#createTestamentModal").modal('hide');
-                $("#successModal").find('a').attr('href', (networkId === 1 ? 'https://etherscan.io/tx/' : 'https://ropsten.etherscan.io/tx/') + hash);
-                $("#successModal").modal('show');
-              });
-
-            } catch (err) {
-              console.log(err);
-              let errorMessage = err;
-              if (err.message) {
-                errorMessage = err.message;
-              }
-
-
-              if (err.code && err.code === 4001) {
-                // User just canceled, no need to show an error.
-              } else {
-                $("#errorModal").find('.modal-body').text('Falha ao executar testamento. Erro: ' + errorMessage);
-                $("#errorModal").modal('show');
-              }
-            }
-          },
-
-          createTestamentV1(message) {
-            return JSON.stringify({
-              version: "v1",
-              message: message
-            });
-          },
-
-          encryptTestament(testamentObjJSON, passphrase) {
-            return {
-              encryptedTestament: CryptoJS.AES.encrypt(testamentObjJSON, passphrase).toString(),
-              testamentHash: sha256(testamentObjJSON)
-            }
-          },
-
-          decryptTestament(testamentId) {
-            let ctx = this;
-
-            $("#txtDecryptPass").val('');
-            $("#decryptMsgModal").modal('show');
-            $("#decryptMsgModal").off().on('shown.bs.modal', function () {
-              setTimeout(() => {
-                $("#txtDecryptPass").focus();
-              }, 200);
-            });
-
-            function doDecrypt() {
-              let testament = ctx.makerTestaments.find(t => t.id === testamentId);
-              if (!testament) {
-                testament = ctx.beneficiaryTestaments.find(t => t.id === testamentId);
-              }
-
-              try {
-
-                if (!testament) {
-                  console.log("Testament not found.");
-                  throw "Ocorreu um erro ao decodificar este testamento. Por favor, atualize a página e tente novamente.";
-                }
-
-                let passwordTxt = $("#txtDecryptPass").val().trim();
-                let encryptedTestament = testament.encryptedTestament;
-                let decryptedObjJSON = CryptoJS.AES.decrypt(encryptedTestament, passwordTxt).toString(CryptoJS.enc.Utf8);
-                let descryptedTestament = JSON.parse(decryptedObjJSON);
-
-                if (descryptedTestament.version === null || descryptedTestament.version === undefined) {
-                  throw "No version found in the testament!";
-                }
-
-                if (descryptedTestament.version === "v1") {
-                  let actualHash = sha256(decryptedObjJSON);
-                  if (actualHash !== testament.testamentHash) {
-                    throw "Message hash doesn't match. Expected: " + testament.testamentHash + ". Got: " + actualHash + ".";
-                  }
-
-                  $("#decryptMsgModal").modal('hide');
-                  $("#decryptMsgModal").off().on('hidden.bs.modal', function () {
-                    $("#decryptMsgModal").off();
-                    testament.message = descryptedTestament.message;
-                  });
-                } else {
-                  throw "Invalid version found in the testament: " + descryptedTestament.version;
-                }
-
-              } catch (err) {
-                console.log(err);
-                $("#errorModal").find('.modal-body').text('Não foi possível decodificar este testamento. Por favor, certifique-se que a senha esteja correta.');
-                $("#errorModal").modal('show');
-                $("#errorModal").off().on('hidden.bs.modal', function () {
-                  $("#errorModal").off();
-                  setTimeout(() => {
-                    $("#txtDecryptPass").focus();
-                  }, 200);
-                });
-              }
-
-              return false;
-            }
-
-            $("#decryptMsgModal").find('form').on('submit',function() {
-              return false;
-            });
-
-            $("#decryptMsgModal").find('[data-decrypt-btn]').off().on('click', doDecrypt);
+            $("#errorMsg").text(errorMsg);
+            $("#errorModal").modal('show');
           }
         }
-      });
+        
+        Utils.invokeMethodAndWaitConfirmation(
+          App.testamentServiceContract.methods.cancelTestament(), 
+          this.walletAddress,
+          async function() {
+            try {
+              ctx.processTestament(ctx, await App.testamentServiceContract.methods.testamentDetailsOf(ctx.walletAddress).call());
+              ctx.cancelTestamentChanges();         
+              ctx.processing = false;
+            } catch (err) {
+              onError(err);
+            }
+          },
+          function(err) {
+            onError(err);
+          }
+        );       
+      },
 
-      new Vue({
-        el: '#app'
-      })
-  }
+      async reactivateTestament() {
+        let ctx = this;
+        this.processing = true;
 
+        function onError(err) {
+          ctx.processing = false;
+          console.log(err);
+
+          // Error 4001 means that user just denied the signature of the transaction, no need to show an error.
+          // The 'Invalid JSON RPC response' is a workaround for the RSK wallet which doesn't provide a good error code...
+          if (err.code !== 4001 && String(err).indexOf("Invalid JSON RPC response") === -1) {
+            let errorMsg = err;
+            if (err.message && err.message.trim().length > 0) {
+              errorMsg = err.message;
+            }
+            $("#errorMsg").text(errorMsg);
+            $("#errorModal").modal('show');
+          }
+        }
+        
+        Utils.invokeMethodAndWaitConfirmation(
+          App.testamentServiceContract.methods.reactivateTestament(), 
+          this.walletAddress,
+          async function() {
+            try {
+              ctx.processTestament(ctx, await App.testamentServiceContract.methods.testamentDetailsOf(ctx.walletAddress).call());
+              ctx.cancelTestamentChanges();         
+              ctx.processing = false;
+            } catch (err) {
+              onError(err);
+            }
+          },
+          function(err) {
+            onError(err);
+          }
+        );       
+      },
+
+      async withdrawFunds() {
+        let ctx = this;
+        this.processing = true;
+
+        function onError(err) {
+          ctx.processing = false;
+          console.log(err);
+
+          // Error 4001 means that user just denied the signature of the transaction, no need to show an error.
+          // The 'Invalid JSON RPC response' is a workaround for the RSK wallet which doesn't provide a good error code...
+          if (err.code !== 4001 && String(err).indexOf("Invalid JSON RPC response") === -1) {
+            let errorMsg = err;
+            if (err.message && err.message.trim().length > 0) {
+              errorMsg = err.message;
+            }
+            $("#errorMsg").text(errorMsg);
+            $("#errorModal").modal('show');
+          }
+        }
+        
+        Utils.invokeMethodAndWaitConfirmation(
+          App.testamentServiceContract.methods.withdrawTestamentFunds(Utils.toBaseUnit(this.inputFundsAmount.trim(), 18).toString()), 
+          this.walletAddress,
+          async function() {
+            try {
+              ctx.processTestament(ctx, await App.testamentServiceContract.methods.testamentDetailsOf(ctx.walletAddress).call());
+              ctx.cancelTestamentChanges();
+              ctx.inputFundsAmount = "";         
+              ctx.processing = false;
+            } catch (err) {
+              onError(err);
+            }
+          },
+          function(err) {
+            onError(err);
+          }
+        );       
+      }
+    }
+  },
+
+  init: async function () {
+
+    try {
+
+      if (!window.ethereum) {
+        throw "Failure detecting wallet (err: 1)";
+      }
+
+      let response = await ethereum.request({ method: 'eth_requestAccounts' });
+      window.web3 = new Web3(window.ethereum);
+
+      if (!response) {
+        throw "Failure detecting wallet (err: 2)";
+      }
+
+      let accounts = response;
+      if (!accounts || !accounts.length) {
+        throw "Failure detecting wallet (err: 3)";
+      }
+
+      App.encryptionKey = await web3.eth.personal.sign('Log-in to CryptoTestament', accounts[0]);
+      App.jsEncrypt.setPublicKey(Utils.SERVICE_PUBLIC_KEY);
+      App.testamentServiceContract = new web3.eth.Contract(Utils.TESTAMENT_SERVICE_ABI, Utils.TESTAMENT_SERVICE_ADDRESS);
+      App.data.walletAddress = accounts[0];
+
+      let testament = await App.testamentServiceContract.methods.testamentDetailsOf(accounts[0]).call();
+      if (testament.exists) {
+        App.vueApp.methods.processTestament(App.data, testament);
+        App.data.testament = testament;
+      }
+
+    } catch (err) {
+      console.log(err);
+      error = err;
+      if (err.message) {
+        error = err.message;
+      }
+      App.data.loadingError = error;
+    }
+
+    Vue.component('dapp-page', App.vueApp);
+
+    new Vue({
+      el: '#app'
+    })
+  } 
+  
 };
 
-$(function () {
-  $(window).load(function () {
-    App.init();
-  });
+
+$(window).load(function () {
+  let attempts = 5;
+  function detectWallet() {
+    if (window.ethereum && window.ethereum.request || attempts === 0) {
+      App.init();
+    } else {
+      attempts--;
+      setTimeout(detectWallet, 2000);
+    }
+  }
+  detectWallet();
 });
+

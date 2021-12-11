@@ -24,20 +24,14 @@
 
 <body id="page-top">
   <div id="app">
-    <main-page />
-  </div>
-
-  <!-- Main content -->
-  <script type="text/x-template" id="main-template">
-  <div>
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
       <div class="container px-5">
-        <a class="navbar-brand fw-bold" href="#page-top">{{langs[lang].title}}</a>
+        <a class="navbar-brand fw-bold" href="#page-top">CryptoTestament</a>
         <div>
           <a href="app.html" target="_blank" class="btn btn-primary rounded-pill px-3 mb-2 mb-lg-0">
             <span class="d-flex align-items-center">
-              <span class="small">{{langs[lang].launchDApp}}</span>
+              <span class="small">Launch dApp</span>
             </span>
           </a>
         </div>
@@ -52,12 +46,12 @@
             <div class="mb-0 text-center">
               <div class="d-flex align-items-center">
                 <div class="px-3">
-                  <img class="img-fluid" src="assets/img/icon.png"  width="120px" />
+                  <img class="img-fluid" src="assets/img/icon.png" width="120px" />
                 </div>
-                <div> 
-                  <h1 class="display-4 lh-1 mb-0">{{langs[lang].title}}</h1>
-                  <p class="lead fw-normal text-muted mb-0">{{langs[lang].subtitle}}</p>
-                </div>    
+                <div>
+                  <h1 class="display-5 lh-1 mb-2">CryptoTestament</h1>
+                  <p class="lead fw-normal text-muted mb-0">Your coins, your testament</p>
+                </div>
               </div>
             </div>
           </div>
@@ -70,8 +64,8 @@
         <div class="row gx-5 justify-content-center">
           <div class="col-sm-12">
             <div class="h2 fs-3 text-white mb-0">
-              <p>{{langs[lang].intro1}}</p>
-              <p class="mb-0">{{langs[lang].intro2}}</p>
+              <p>With crypto, control your money.</p>
+              <p class="mb-0">With CryptoTestament, you decide who gets it when you're gone.</p>
             </div>
           </div>
         </div>
@@ -90,16 +84,16 @@
                   <!-- Feature item-->
                   <div class="text-center">
                     <i class="bi-file-code icon-feature text-gradient d-block mb-0"></i>
-                    <h3 class="font-alt">Contrato inteligente</h3>
-                    <p class="text-muted mb-0">Tire proveito de um contrato inteligente que será executado de forma automatizada e garanta que seu testamento seja honrado mesmo na sua ausência.</p>
+                    <h3 class="font-alt">Smart contract</h3>
+                    <p class="text-muted mb-0">Rest assured that your testament will be honored when you're gone thanks to our <a href="#" target="_blank">verified smart contract</a>.</p>
                   </div>
                 </div>
                 <div class="col-lg-6 mb-5">
                   <!-- Feature item-->
                   <div class="text-center">
-                    <i class="bi-x-circle icon-feature text-gradient d-block mb-0"></i>
-                    <h3 class="font-alt">Sem burocracias</h3>
-                    <p class="text-muted mb-0">Elimine a necessidade de advogados, juízes e inventários apenas para repassar recursos financeiros aos seus entes queridos. Mais facilidade, menos dor de cabeça.</p>
+                    <i class="bi-emoji-smile icon-feature text-gradient d-block mb-0"></i>
+                    <h3 class="font-alt">Simple and effective</h3>
+                    <p class="text-muted mb-0">Eliminate the need for lawyers, judges and inventories just to pass on financial resources to your loved ones.</p>
                   </div>
                 </div>
               </div>
@@ -108,16 +102,16 @@
                   <!-- Feature item-->
                   <div class="text-center">
                     <i class="bi-file-lock icon-feature text-gradient d-block mb-0"></i>
-                    <h3 class="font-alt">Patrimônio blindado</h3>
-                    <p class="text-muted mb-0">Proteja-se contra pessoas e entidades indesejáveis. Tenha seu testamento assegurado através de milhares de computadores espalhados pelo mundo graças à blockchain.</p>
+                    <h3 class="font-alt">Shielded funds</h3>
+                    <p class="text-muted mb-0">Have your funds secured by the blockchain and keep unwanted entities away from your wealth.</p>
                   </div>
                 </div>
                 <div class="col-lg-6  mb-0">
                   <!-- Feature item-->
                   <div class="text-center">
-                    <i class="bi-eye-slash icon-feature text-gradient d-block mb-0"></i>
-                    <h3 class="font-alt">Privacidade</h3>
-                    <p class="text-muted mb-0"> Mantenha a privacidade e segurança dos seus entes queridos: ninguém mais além de vocês precisa ter conhecimento sobre seu plano de sucessão financeira.</p>
+                    <i class="bi-piggy-bank icon-feature text-gradient d-block mb-0"></i>
+                    <h3 class="font-alt">Save on costs</h3>
+                    <p class="text-muted mb-0"> We only charge a small and immutable fee of 0.25% on top of the funds deposited in testament.</p>
                   </div>
                 </div>
               </div>
@@ -126,144 +120,42 @@
         </div>
       </div>
     </section>
-    <!-- Basic features section-->
-    <section class="bg-light pb-0">
-      <div class="container px-5">
-        <div class="row gx-5">
-          <div class="col-lg-6 col-md-12">
-            <h2 class="lh-1 mb-4 font-alt">Como deixar um testamento?</h2>
-            <ol class="text-muted">
-              <li>O <em>Crypto Testament</em> funciona na blockchain do  <em>Ethereum</em>, e você precisará de uma carteira compatível. Recomendamos a carteira <a href="https://metamask.io/" target="_blank">MetaMask</a>.</li>
-              <li>Acesse o <a href="app.html" target="_blank" >DApp</a>.</li>
-              <li>Selecione a aba "Deixar um testamento".</li>
-              <li>Conecte a sua carteira <em>MetaMask</em>.</li>
-              <li>Clique no link para "Deixar um testamento", no final da página.</li>
-              <li>Especifique o endereço de carteira da pessoa beneficiada.</li>
-              <li>Especifique uma quantia em ETH.</li>
-              <li>Determine a partir de quantos dias o testamento poderá ser executado.</li>
-              <li>Escreva seu testamento. Ele será disponibilizado ao seu ente querido.</li>
-              <li>Escolha uma senha que apenas você e a pessoa beneficiada saibam. Ela será utilizada para codificarr/decodificar a mensagem do testamento.</li>
-              <li>Envie a transação na rede.</li>
-              <li>Pronto! Basta aguardar a confirmação da transação.</li>
-            </ol>
-          </div>
-          <div class="col-lg-6 col-md-12">
-            <h2 class="lh-1 mb-4 font-alt mt-4 mt-lg-0">Posso cancelar um testamento?</h2>
-            <p class="text-muted">Sim! A qualquer momento, você pode cancelar um testamento em aberto e recuperar os fundos diretamente na sua carteira. Para isso:</p>
-            <ol class="text-muted">
-              <li>Acesse o <a href="app.html" target="_blank" >DApp</a>.</li>
-              <li>Selecione a aba "Deixar um testamento".</li>
-              <li>Conecte a sua carteira <em>MetaMask</em>.</li>
-              <li>Localize o testamento em aberto na lista.</li>
-              <li>Selecione a opção para cancelá-lo.</li>
-              <li>Envie a transação na rede.</li>
-              <li>Pronto! Assim que a transação for confirmada, os fundos serão automaticamente devolvidos para a sua carteira.</li>
-            </ol>
-            <p class="text-muted"><strong><u>Nota:</u></strong> uma vez executado, um testamento não poderá ser cancelado, visto que os fundos já terão sido direcionados para a pessoa beneficiada.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- Basic features section-->
-    <section class="bg-light pt-0">
-      <div class="container px-5">
-        <div class="row gx-5">
-          <div class="col-lg-6 col-md-12">
-            <h2 class="lh-1 mb-4 font-alt mt-4">Posso alterar um testamento? </h2>
-            <p class="text-muted">Não. Uma vez criado, um testamento poderá ser apenas cancelado (por você) ou executado (pela pessoa beneficiada). Caso precise alterar um testamento, será necessário cancelá-lo e posteriormente criar um outro. Por este motivo, recomendamos que revise bem seu testamento antes de enviá-lo na rede.</p>
-          </div>
-          <div class="col-lg-6 col-md-12">
-            <h2 class="lh-1 mb-4 font-alt mt-4">Como executar um testamento? </h2>
-            <p class="text-muted">Para garantir que seu testamento seja executado mesmo na sua ausência, apenas a pessoa beneficiada poderá executá-lo no momento certo (estipulado por você). Para isso, como pessoa beneficiada:</p>
-            <ol class="text-muted">
-              <li>Acesse o <a href="app.html" target="_blank" >DApp</a>.</li>
-              <li>Selecione a opção para "Executar um testamento".</li>
-              <li>Conecte a sua carteira <em>MetaMask</em>.</li>
-              <li>Localize (se houver), o testamento que te menciona.</li>
-              <li>Clique no link para decodificar a mensagem do testamento.</li>
-              <li>Insira a senha usada para decodificá-la (compartilhada pelo seu ente querido).</li>
-              <li>Clique no botão "Executar testamento".</li>
-              <li>Envie a transação na rede.</li>
-              <li>Pronto! Os recursos serão automaticamete transferidos para sua carteira assim que a transação for confirmada.</li>
-            </ol>
-            <p class="text-muted"><strong><u>Nota:</u></strong> para maior privacidade e segurança, apenas testamentos cujo tempo mínimo de execução tenha se passado serão listados para a pessoa beneficiada. Isso quer dizer que se você criar um testamento hoje para ser executado apenas a partir de 10 dias, a pessoa beneficiada só poderá vê-lo daqui 10 dias.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Basic features section-->
-    <section>
-      <div class="container px-5">
-        <div class="row gx-5">
-          <div class="col-sm-12">
-            <h2 class="font-alt lh-1 mb-4">Posso confiar nesse serviço?</h2>
-
-            <p class="text-muted">Uma das grandes inovações do <em>Bitcoin</em> foi trazer um sistema de pagamentos em que
-              não é necessário confiar cegamente no mesmo. A idéia do <strong><em>Don't trust,
-                      verify</em></strong> não é
-              apenas um mantra, mas um fato: qualquer um pode inspecionar o código do software do <em>Bitcoin</em>
-              e verificar se ele de fato implementa o que propõe. Tem dúvida? Você pode sempre verificar <a
-                  href="https://github.com/bitcoin" target="_blank">aqui</a>.</p>
-          <p class="text-muted"> O mesmo fundamento existe na blockchain do <em>Ethereum</em>, onde o contrato
-              inteligente do <em>Crypto Testament</em> está implantado. Qualquer um pode acessar a especificação
-              desses
-              contrato e verificar sua corretude e procedência. Não confia? Sem problemas! Verifique: <a href="https://ropsten.etherscan.io/address/0x27459e2f72ed77fa9cf2dbac0b90e0548b2d7489#code" target="_blank">Contrato Crypto Testament</a>.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-        <!-- Basic features section-->
-    <section class="bg-light">
-      <div class="container px-5">
-        <div class="row gx-5">
-          <div class="col-sm-12">
-            <h2 class="font-alt lh-1 mb-4">Quanto custa o serviço?</h2>
-            <p class="text-muted">Além da taxa variável da rede <em>Ethereum</em>, o contrato inteligente automaticamente cobra uma taxa de serviço no momento em que um testamento é criado. Atualmente, esta taxa é de apenas 2%.</p>
-            <p class="text-muted"><strong>Exemplo</strong>: se você criar um testamento depositando 1 ETH, uma taxa de 0.01 ETH será automaticamente cobrada, restando 0.99 ETH no testamento que poderá ser cancelado ou executado.</p>
-            <p class="text-muted">Nenhuma taxa adicional  — além da taxa da rede  <em>Ethereum</em> — será cobrada ao cancelar ou executar um testamento, ou seja, se há 0.99 ETH disponíveis no testamento, ao cancelá-lo, você receberá de volta 0.99 ETH na sua carteira. De forma análoga, a pessoa beneficiada receberá a quantia de 0.99 ETH ao executar o testamento.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
 
     <!-- Call to action section-->
     <section class="cta">
       <div class="cta-content">
-        <div class="container px-5">
+        <div class="container px-5 text-center">
           <h2 class="text-white display-7 lh-1 mb-4">
-            Não deixe para depois.
-            <br />
-            Dê destino certo ao seu dinheiro agora.
+            Wait no more.
+            <br/>
+            Take care of your testament now.
           </h2>
           <a class="btn btn-outline-light py-3 px-4 rounded-pill" href="https://startbootstrap.com/theme/new-age"
-            target="_blank" href="app.html">Acessar DApp</a>
+            target="_blank" href="app.html">Launch dApp</a>
         </div>
       </div>
     </section>
-
     <!-- Footer-->
     <footer class="bg-black text-center py-5">
       <div class="container px-5">
-        <div class="text-white-50 small">
-          <div class="mb-0">{{langs[lang].title}} 2021.</div>
-          <div class="mb-0">{{langs[lang].broughtBy}} <u><a href="/" target="_blank">LiberDApps</a></u>.</div>
-          <div class="mb-0"><u><a href="mailto:liberdapps@protonmail.com">liberdapps@protonmail.com</a></u></div>
-        </div>
+          <div class="text-white-50 small">
+              <div class="mb-0">CryptoTestament 2021.</div>
+              <div class="mb-0">
+                  Brought by <u><a href="/" target="_blank">LiberDApps</a></u>.
+              </div>
+              <div class="mb-0">
+                  <u><a href="mailto:liberdapps@protonmail.com">liberdapps@protonmail.com</a></u>
+              </div>
+          </div>
       </div>
-    </footer>
-    </div>
-  </script>
+  </footer>
+</div>
 
   <!-- Include all compiled plugins (below), or include individual files as needed -->
   <script src="./js/bootstrap.min.js"></script>
   <script src="./js/web3.min.js"></script>
   <script src="./js/vue.min.js"></script>
   <script src="./js/app.js"></script>
-  <script>if(!sessionStorage.getItem("_swa")&&document.referrer.indexOf(location.protocol+"//"+location.host)!== 0){fetch("https://counter.dev/track?"+new URLSearchParams({referrer:document.referrer,screen:screen.width+"x"+screen.height,user:"ldapps",utcoffset:"0"}))};sessionStorage.setItem("_swa","1");</script>
 </body>
 
 

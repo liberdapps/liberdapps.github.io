@@ -11661,14 +11661,13 @@ footer a:hover, footer a:active, footer a:focus {
   position: relative;
   margin: 0 auto;
   background: #fff;
-  padding: 2rem;
-
+  padding: 1.5rem;
   }
 
 
-  @media (min-width: 1400px) {
+  @media (min-width: 992px) {
     #dapp-page .container-dapp {
-      max-width: 1140px;
+      max-width: 800px;
   }
 }
 
