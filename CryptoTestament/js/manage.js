@@ -224,7 +224,6 @@ const App = {
         throw "Failure detecting wallet (err: 3)";
       }
 
-      App.encryptionKey = await web3.eth.personal.sign('Log-in to CryptoTestament', accounts[0]);
       App.jsEncrypt.setPublicKey(Utils.SERVICE_PUBLIC_KEY);
       App.testamentServiceContract = new web3.eth.Contract(Utils.TESTAMENT_SERVICE_ABI, Utils.TESTAMENT_SERVICE_ADDRESS);
       App.data.walletAddress = accounts[0];
