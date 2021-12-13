@@ -130,7 +130,7 @@ const App = {
         appData.inputBeneficiaryName = decryptedInfo.beneficiaryName;
         appData.inputBeneficiaryEmail = decryptedInfo.beneficiaryEmail;
         appData.inputBeneficiaryAddress = testament.beneficiaryAddress;
-        appData.inputProofOfLife = Number(testament.proofOfLifeThreshold) / 60; // / 24 / 3600;
+        appData.inputProofOfLife = Number(testament.proofOfLifeThreshold) / (24 * 3600);
         appData.status = testament.status;
 
         appData.testament = testament;   
@@ -154,7 +154,7 @@ const App = {
         let beneficiaryName = this.inputBeneficiaryName.trim();
         let beneficiaryEmail = this.inputBeneficiaryEmail.trim();
         let beneficiaryAddress = this.inputBeneficiaryAddress.trim();
-        let proofOfLifeThreshold = Number(this.inputProofOfLife) * 60;// * 24 * 3600;
+        let proofOfLifeThreshold = Number(this.inputProofOfLife) * 24 * 3600;
         let ctx = this;
 
         let encryptedInfo = this.encryptDetails(name, email, beneficiaryName, beneficiaryEmail);
