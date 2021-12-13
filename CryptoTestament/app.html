@@ -192,7 +192,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="txtContact" class="form-label mb-0">Proof of life threshold: {{inputProofOfLife + ' days'}}</label>
-                                <input type="range" class="form-range" min="1" max="365" :disabled="(!editMode && testament !== null) || processing" v-model="inputProofOfLife" />
+                                <input type="range" class="form-range" min="30" max="365" :disabled="(!editMode && testament !== null) || processing" v-model="inputProofOfLife" />
                                 <div class="form-text mt-0">For how many days should the testament stay locked after you send a proof of life (make a deposit, a withdraw or change the testament details)? Example: if you choose 30 days, your testament will be unlocked if more than 30 days pass since your last transaction.</div>
                             </div>
                             <div class="text-center mb-1">
