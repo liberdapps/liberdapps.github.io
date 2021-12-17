@@ -76,6 +76,8 @@ const App = {
           testament.lastProofOfLifeTimestamp = Number(testament.lastProofOfLifeTimestamp);
           testament.proofOfLifeThreshold = Number(testament.proofOfLifeThreshold);
           testament.decryptedInfo = JSON.parse(CryptoJS.AES.decrypt(testament.encryptedInfo, decryptedEncryptionKey).toString(CryptoJS.enc.Utf8));
+          
+          console.log(testament);
   
           if (this.isExecutedTestament(testament)) {
             testamentList.executed.push(testament);
